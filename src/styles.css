@@ -2,7 +2,8 @@
 @source "../src";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+/* Dark mode follows the device setting. */
+@custom-variant dark (@media (prefers-color-scheme: dark));
 
 /*
  * Design system definition.
@@ -10,15 +11,48 @@
  * The @theme inline block maps CSS custom properties to Tailwind utility
  * classes (e.g. --color-primary -> bg-primary, text-primary).
  *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
+ * :root defines light values; the prefers-color-scheme block redefines them
+ * for dark mode. All colors MUST use oklch format.
  *
  * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
+ * 1. Add the variable to :root (light value) and the dark block (dark value)
  * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ *
+ * S.O.L palette: black and white, with a little blue as the only accent.
+ *   noir        #0A0A0A  hero, header, footer, Party Packs
+ *   noir-soft   #161616  cards on noir
+ *   noir-line   #2E2E2E  borders on noir
+ *   graphite    #262626  welcome band under the hero
+ *   linen       #EEEBE6  bestsellers banner (matches its photo backdrop)
+ *   sage        #91926A  ethnic banner (matches its photo wall)
+ *   paper       #FFFFFF  announcement bar, marquee, sticker, pins, buttons on noir
+ *   ink         #0A0A0A  light-mode text and primary buttons
+ *   offwhite    #FAFAFA  text on noir
+ *   blue        #2E3BFF  accent on light (Sale, % off, focus ring)
+ *   blue-light  #6B76FF  the same accent on dark backgrounds
  */
 
 @theme inline {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", "DM Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --color-noir: var(--sol-noir);
+  --color-noir-soft: var(--sol-noir-soft);
+  --color-noir-line: var(--sol-noir-line);
+  --color-graphite: var(--sol-graphite);
+  --color-linen: var(--sol-linen);
+  --color-sage: var(--sol-sage);
+  --color-paper: var(--sol-paper);
+  --color-offwhite: var(--sol-offwhite);
+  --color-ink: var(--sol-ink);
+  --color-on-noir-muted: var(--sol-on-noir-muted);
+  --color-blue: var(--sol-blue);
+  --color-blue-light: var(--sol-blue-light);
+  /* Blue for text: switches to the lighter blue on dark backgrounds. */
+  --color-blue-accent: var(--blue-accent);
+  --color-whatsapp: var(--sol-whatsapp);
+  --color-success: var(--success);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -59,77 +93,99 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --animate-marquee: sol-marquee 28s linear infinite;
+  --animate-rise: sol-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-spin-slow: spin 14s linear infinite;
 }
 
 :root {
-  --radius: 0.625rem;
+  color-scheme: light dark;
+
+  /* Brand constants (same in both modes) */
+  --sol-noir: oklch(0.145 0 0);
+  --sol-noir-soft: oklch(0.196 0 0);
+  --sol-noir-line: oklch(0.301 0 0);
+  --sol-graphite: oklch(0.27 0 0);
+  --sol-linen: oklch(0.941 0.007 80.7);
+  --sol-sage: oklch(0.649 0.056 109.1);
+  --sol-paper: oklch(1 0 0);
+  --sol-offwhite: oklch(0.985 0 0);
+  --sol-ink: oklch(0.145 0 0);
+  --sol-on-noir-muted: oklch(0.716 0 0);
+  --sol-blue: oklch(0.504 0.278 268.6);
+  --sol-blue-light: oklch(0.629 0.201 275.6);
+  --sol-whatsapp: oklch(0.761 0.201 149.7);
+
+  --radius: 0.75rem;
   --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --foreground: var(--sol-ink);
+  --card: oklch(0.97 0 0);
+  --card-foreground: var(--sol-ink);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --popover-foreground: var(--sol-ink);
+  --primary: var(--sol-ink);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.931 0 0);
+  --secondary-foreground: var(--sol-ink);
+  --muted: oklch(0.955 0 0);
+  --muted-foreground: oklch(0.44 0 0);
+  --accent: oklch(0.955 0 0);
+  --accent-foreground: var(--sol-ink);
+  --destructive: oklch(0.5 0.182 29.5);
+  --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.509 0.132 151.2);
+  --border: oklch(0.907 0 0);
+  --input: oklch(0.82 0 0);
+  --ring: var(--sol-blue);
+  --blue-accent: var(--sol-blue);
+  --chart-1: var(--sol-ink);
+  --chart-2: oklch(0.44 0 0);
+  --chart-3: oklch(0.716 0 0);
+  --chart-4: var(--sol-blue);
+  --chart-5: oklch(0.87 0 0);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: var(--sol-ink);
+  --sidebar-primary: var(--sol-ink);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.955 0 0);
+  --sidebar-accent-foreground: var(--sol-ink);
+  --sidebar-border: oklch(0.907 0 0);
+  --sidebar-ring: var(--sol-blue);
 }
 
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: var(--sol-noir);
+    --foreground: var(--sol-offwhite);
+    --card: var(--sol-noir-soft);
+    --card-foreground: var(--sol-offwhite);
+    --popover: oklch(0.239 0 0);
+    --popover-foreground: var(--sol-offwhite);
+    --primary: var(--sol-offwhite);
+    --primary-foreground: var(--sol-ink);
+    --secondary: oklch(0.239 0 0);
+    --secondary-foreground: var(--sol-offwhite);
+    --muted: oklch(0.239 0 0);
+    --muted-foreground: var(--sol-on-noir-muted);
+    --accent: oklch(0.239 0 0);
+    --accent-foreground: var(--sol-offwhite);
+    --destructive: oklch(0.759 0.144 26.1);
+    --destructive-foreground: var(--sol-ink);
+    --success: oklch(0.83 0.129 155.5);
+    --border: var(--sol-noir-line);
+    --input: oklch(0.44 0 0);
+    --ring: var(--sol-blue-light);
+    --blue-accent: var(--sol-blue-light);
+    --sidebar: var(--sol-noir-soft);
+    --sidebar-foreground: var(--sol-offwhite);
+    --sidebar-primary: var(--sol-offwhite);
+    --sidebar-primary-foreground: var(--sol-ink);
+    --sidebar-accent: oklch(0.239 0 0);
+    --sidebar-accent-foreground: var(--sol-offwhite);
+    --sidebar-border: var(--sol-noir-line);
+    --sidebar-ring: var(--sol-blue-light);
+  }
 }
 
 @layer base {
@@ -137,8 +193,108 @@
     border-color: var(--color-border);
   }
 
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  /* Keep in-page anchors clear of the sticky header. */
+  [id] {
+    scroll-margin-top: 8rem;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  /* Visible keyboard focus on everything, overriding component-level outline resets. */
+  :focus-visible {
+    outline: 3px solid var(--ring) !important;
+    outline-offset: 2px !important;
+  }
+}
+
+/* Black brand surfaces (header, footer, hero, Party Packs) keep their own
+   readable palette in both modes. */
+.surface-noir {
+  --ring: var(--sol-blue-light);
+  --blue-accent: var(--sol-blue-light);
+  --primary: var(--sol-offwhite);
+  --primary-foreground: var(--sol-ink);
+  --muted-foreground: var(--sol-on-noir-muted);
+  --border: var(--sol-noir-line);
+  background-color: var(--sol-noir);
+  color: var(--sol-offwhite);
+}
+
+/* White strips (announcement bar, marquee) stay white in dark mode too. */
+.surface-paper {
+  --ring: var(--sol-blue);
+  --blue-accent: var(--sol-blue);
+  --background: var(--sol-paper);
+  --foreground: var(--sol-ink);
+  --muted: oklch(0.955 0 0);
+  --muted-foreground: oklch(0.44 0 0);
+  --accent: oklch(0.955 0 0);
+  --accent-foreground: var(--sol-ink);
+  --border: oklch(0.907 0 0);
+  --primary: var(--sol-ink);
+  --primary-foreground: oklch(1 0 0);
+  background-color: var(--sol-paper);
+  color: var(--sol-ink);
+}
+
+@keyframes sol-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes sol-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-marquee {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+@media print {
+  body {
+    background: white;
+    color: black;
   }
 }
