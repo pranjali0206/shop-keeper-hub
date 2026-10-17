@@ -309,6 +309,69 @@ export const JEANS_EDITS: EditTile[] = [
   },
 ];
 
+export type LookVideo = {
+  /** Name on the card, usually the product the clip features. */
+  title: string;
+  /** Price in rupees, shown under the title. Leave null to hide it. */
+  price: number | null;
+  /** Portrait clip, 9:16 (e.g. 720x1280 MP4, 8 to 15 seconds). Plays muted on a loop while on screen. */
+  video: string | null;
+  /** Still frame shown until the clip loads, same size as the video (WebP). */
+  poster: string | null;
+  /** Product page slug. When set, the card opens that product instead of `link`. */
+  product?: string;
+  link: ShopTarget;
+};
+
+/** Heading of the video row before Trending. */
+export const LOOK_TITLE = { light: "Fits in", bold: "Motion" };
+
+/** Video row before Trending. A card without a video or poster shows plain black. */
+export const LOOK_VIDEOS: LookVideo[] = [
+  {
+    title: "Baggy Denim Fit",
+    price: null,
+    video: null,
+    poster: null,
+    link: { slug: "jeans", search: { fit: "baggy" } },
+  },
+  {
+    title: "Linen Shirt Look",
+    price: null,
+    video: null,
+    poster: null,
+    link: { slug: "shirts", search: { fabric: "linen" } },
+  },
+  {
+    title: "Cargo Street Fit",
+    price: null,
+    video: null,
+    poster: null,
+    link: { slug: "trousers-cargos" },
+  },
+  {
+    title: "Festive Kurta Set",
+    price: null,
+    video: null,
+    poster: null,
+    link: { slug: "ethnic" },
+  },
+  {
+    title: "Party Black Shirt",
+    price: null,
+    video: null,
+    poster: null,
+    link: { slug: "party-wear" },
+  },
+  {
+    title: "Hoodie Season",
+    price: null,
+    video: null,
+    poster: null,
+    link: { slug: "hoodies-jackets" },
+  },
+];
+
 export const TRENDING_TABS: { label: string; link: ShopTarget }[] = [
   { label: "All", link: { slug: "all", search: { sort: "popular" } } },
   { label: "Shirts", link: { slug: "shirts" } },

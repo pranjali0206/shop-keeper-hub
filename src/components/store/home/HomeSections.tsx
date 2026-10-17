@@ -1,16 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import useEmblaCarousel from "embla-carousel-react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { GarmentIllustration } from "@/components/common/GarmentIllustration";
 import { Logo } from "@/components/common/Logo";
 import type { ShopTarget } from "@/lib/catalog";
 import { categoriesQuery } from "@/lib/data";
+import { formatINR } from "@/lib/format";
 import {
   type EditTile,
   type HeroCaption,
+  type LookVideo,
   BESTSELLER_BANNER,
   CATEGORY_STRIP,
   ETHNIC_BANNER,
@@ -18,6 +20,8 @@ import {
   HERO_SLIDES,
   JEANS_EDITS,
   JEANS_QUOTE,
+  LOOK_TITLE,
+  LOOK_VIDEOS,
   SHIRT_EDITS,
   SHIRT_QUOTE,
   TRENDING_TABS,
@@ -637,6 +641,200 @@ export function EthnicBanner() {
           </span>
         </div>
       </ShopTargetLink>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Fits in motion: short portrait videos that play muted while on screen
+// ---------------------------------------------------------------------------
+const videoButton =
+  "absolute z-[2] inline-flex size-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+
+function LookCard({
+  look,
+  reducedMotion,
+  soundOn,
+  onToggleSound,
+}: {
+  look: LookVideo;
+  reducedMotion: boolean;
+  soundOn: boolean;
+  onToggleSound: () => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [inView, setInView] = useState(false);
+  // The visitor's own play/pause choice; until they press it, play unless motion is reduced.
+  const [choice, setChoice] = useState<"play" | "pause" | null>(null);
+  const shouldPlay = choice ? choice === "play" : !reducedMotion;
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => setInView(!!entries[0]?.isIntersecting), {
+      threshold: 0.5,
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  // Only clips on screen play, so the row never downloads or decodes more than it shows.
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    if (inView && shouldPlay) {
+      el.play().catch((err: unknown) => {
+        // The browser blocked autoplay: show the play button instead.
+        if (err instanceof DOMException && err.name === "NotAllowedError") setChoice("pause");
+      });
+    } else {
+      el.pause();
+    }
+  }, [inView, shouldPlay]);
+
+  // Set as a property: React does not reliably render the `muted` attribute.
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = !soundOn;
+  }, [soundOn]);
+
+  const media = look.video ? (
+    <video
+      ref={videoRef}
+      src={look.video}
+      poster={look.poster ?? undefined}
+      muted
+      loop
+      playsInline
+      preload="none"
+      aria-hidden="true"
+      className="h-full w-full object-cover"
+    />
+  ) : look.poster ? (
+    <img
+      src={look.poster}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      className="h-full w-full object-cover"
+    />
+  ) : null;
+
+  const cardClass =
+    "group relative block aspect-[9/16] overflow-hidden rounded-xl bg-noir-soft text-white";
+  const body = (
+    <>
+      {media}
+      <span
+        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/75 to-transparent"
+      />
+      <span className="absolute bottom-5 left-5 right-16 block">
+        <span className="block text-lg font-semibold leading-snug group-hover:underline group-hover:underline-offset-4">
+          {look.title}
+        </span>
+        {look.price != null ? (
+          <span className="mt-1 block text-base font-semibold">{formatINR(look.price)}</span>
+        ) : null}
+      </span>
+    </>
+  );
+
+  return (
+    <>
+      {look.product ? (
+        <Link to="/product/$slug" params={{ slug: look.product }} className={cardClass}>
+          {body}
+        </Link>
+      ) : (
+        <ShopTargetLink target={look.link} className={cardClass}>
+          {body}
+        </ShopTargetLink>
+      )}
+      {/* Outside the link: buttons cannot sit inside one. */}
+      {look.video ? (
+        <>
+          <button
+            type="button"
+            className={cn(videoButton, "right-3 top-3")}
+            onClick={() => setChoice(shouldPlay ? "pause" : "play")}
+            aria-label={shouldPlay ? `Pause ${look.title} video` : `Play ${look.title} video`}
+          >
+            {shouldPlay ? (
+              <Pause className="size-4" aria-hidden="true" />
+            ) : (
+              <Play className="size-4" aria-hidden="true" />
+            )}
+          </button>
+          <button
+            type="button"
+            className={cn(videoButton, "bottom-4 right-4")}
+            onClick={onToggleSound}
+            aria-pressed={soundOn}
+            aria-label={`Sound for ${look.title} video`}
+          >
+            {soundOn ? (
+              <Volume2 className="size-4" aria-hidden="true" />
+            ) : (
+              <VolumeX className="size-4" aria-hidden="true" />
+            )}
+          </button>
+        </>
+      ) : null}
+    </>
+  );
+}
+
+export function LookVideos() {
+  const reducedMotion = usePrefersReducedMotion();
+  // One clip with sound at a time; turning one on mutes the rest.
+  const [soundIndex, setSoundIndex] = useState<number | null>(null);
+  const scroller = useRef<HTMLUListElement>(null);
+  const scrollBy = useCallback((dir: 1 | -1) => {
+    const el = scroller.current;
+    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
+  }, []);
+
+  if (LOOK_VIDEOS.length === 0) return null;
+
+  return (
+    <section aria-labelledby="look-videos-title" className="surface-paper py-10 sm:py-14">
+      <SectionTitle id="look-videos-title" light={LOOK_TITLE.light} bold={LOOK_TITLE.bold} />
+      <div className="relative mt-6">
+        <ul
+          ref={scroller}
+          className="flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:scroll-px-12 sm:gap-4 sm:px-12 [&::-webkit-scrollbar]:hidden"
+        >
+          {LOOK_VIDEOS.map((look, i) => (
+            <li
+              key={look.title}
+              className="relative w-[62%] shrink-0 snap-start sm:w-[38%] lg:w-[23%] xl:w-[19.5%]"
+            >
+              <LookCard
+                look={look}
+                reducedMotion={reducedMotion}
+                soundOn={soundIndex === i}
+                onToggleSound={() => setSoundIndex((cur) => (cur === i ? null : i))}
+              />
+            </li>
+          ))}
+        </ul>
+        <button
+          type="button"
+          className={cn(arrowButton, "left-2 hidden border md:inline-flex")}
+          onClick={() => scrollBy(-1)}
+          aria-label="Scroll videos left"
+        >
+          <ChevronLeft className="size-5" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className={cn(arrowButton, "right-2 hidden border md:inline-flex")}
+          onClick={() => scrollBy(1)}
+          aria-label="Scroll videos right"
+        >
+          <ChevronRight className="size-5" aria-hidden="true" />
+        </button>
+      </div>
     </section>
   );
 }

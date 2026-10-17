@@ -6,6 +6,7 @@ import {
   EthnicBanner,
   HeroCarousel,
   JeansEdits,
+  LookVideos,
   ShirtEdits,
   TrendingPlaceholder,
   WelcomeBand,
@@ -27,6 +28,7 @@ function Home() {
       <ShirtEdits />
       <EthnicBanner />
       <JeansEdits />
+      <LookVideos />
       <TrendingPlaceholder />
     </>
   );
